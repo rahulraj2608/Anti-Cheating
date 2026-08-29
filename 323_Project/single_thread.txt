@@ -1,0 +1,94 @@
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+
+#include <winsock2.h>
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "clipboard_monitor.h"
+#include "network_filter.h"
+#include "app_monitor.h"
+#include "server_comm.h"
+
+// ============================================================================
+// Single-Threaded Tick Function Definitions
+// (Defined inline here so main.c compiles without editing your other .c files)
+// ============================================================================
+
+void check_clipboard_tick(void) {
+    // Add your single-pass clipboard inspection logic here if extracted from clipboard_monitor.c
+}
+
+void run_network_filter_tick(void) {
+    // Add your single-pass network filtering logic here if extracted from network_filter.c
+}
+
+void sync_server_data_tick(const char *student_name, const char *student_id, const char *pc_id) {
+    // Add your synchronous server communication/heartbeat logic here
+}
+
+int main(void) {
+    char student_name[128];
+    char student_id[64];
+    char pc_id[64];
+
+    DWORD pc_len = sizeof(pc_id);
+    if (!GetComputerNameA(pc_id, &pc_len)) {
+        strncpy(pc_id, "PC-01", sizeof(pc_id));
+    }
+
+    printf("=== System Monitoring Tools Started (Single-Threaded Baseline) ===\n\n");
+
+    printf("Enter Student Name: ");
+    if (fgets(student_name, sizeof(student_name), stdin) != NULL) {
+        student_name[strcspn(student_name, "\r\n")] = 0;
+    }
+
+    printf("Enter Student ID: ");
+    if (fgets(student_id, sizeof(student_id), stdin) != NULL) {
+        student_id[strcspn(student_id, "\r\n")] = 0;
+    }
+
+    printf("\n[Main] Starting sequential monitoring for %s (%s) on %s...\n\n", student_name, student_id, pc_id);
+
+    DWORD start_time = GetTickCount();
+    DWORD run_duration_ms = 200000; // 200 seconds total run time
+
+    DWORD last_app_check = 0;
+    DWORD last_clipboard_check = 0;
+    DWORD last_server_sync = 0;
+
+    // Single-threaded main polling loop
+    while ((GetTickCount() - start_time) < run_duration_ms) {
+        DWORD current_time = GetTickCount();
+
+        // 1. App Monitor Tick (Scheduled every 5000 ms)
+        if (current_time - last_app_check >= 5000) {
+            print_open_applications(); // Calls existing app_monitor.h function
+            last_app_check = GetTickCount();
+        }
+
+        // 2. Clipboard Monitor Tick (Scheduled every 150 ms)
+        if (current_time - last_clipboard_check >= 150) {
+            check_clipboard_tick();
+            last_clipboard_check = GetTickCount();
+        }
+
+        // 3. Network Filter Processing (Runs every iteration)
+        run_network_filter_tick();
+
+        // 4. Server Sync Tick (Scheduled every 10,000 ms)
+        if (current_time - last_server_sync >= 10000) {
+            sync_server_data_tick(student_name, student_id, pc_id);
+            last_server_sync = GetTickCount();
+        }
+
+        // Yield CPU time to avoid 100% core utilization
+        Sleep(10);
+    }
+
+    printf("\n[Main] Single-threaded monitoring run complete.\n");
+    return 0;
+}
