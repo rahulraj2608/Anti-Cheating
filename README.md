@@ -1,0 +1,40 @@
+ExamGuard - Lab Anti-Cheating & System Monitoring Suite
+
+ExamGuard is a multi-threaded anti-cheating monitoring software designed for academic computer lab exams. It enforces exam integrity by combining a low-level C Windows client agent with a Node.js backend and an interactive web front-end dashboard.
+
+
+Key Features
+
+OS-Level Clipboard Control: Enforces copy limits specified by the instructor and actively blocks unauthorized copying using Windows system calls.
+
+Live Application Tracking: Monitors open window handles and processes, displaying live active applications on the teacher's dashboard.
+
+Network & Web Filtering: Restricts web access strictly to whitelisted websites, blocking any unauthorized external network requests.
+
+
+Concurrent Multi-Threaded Architecture: Powered by Win32 worker threads (CreateThread) so that server communications and network delays never freeze or interrupt real-time monitoring and enforcement.System 
+
+ArchitectureFrontend: Web-based instructor dashboard for setting copy limits, viewing active student apps, and monitoring exam activity in real time.
+
+Backend: Node.js server handling data aggregation, client telemetry, and dashboard API requests.
+
+C Client Agent (323_Project): Low-level Windows agent that executes OS system calls, network filtering, application auditing, and clipboard restrictions.
+
+Optimization: In the single-threaded setup, the program acted like a single-lane road where clipboard blocking, app monitoring, web filtering, and server updates all had to wait in one line. Whenever the network connection slowed down, the entire program ground to a halt while waiting for the server, causing severe lag and completely freezing security checks.
+By optimizing the software with multithreading, each monitoring task was given its own independent lane. Now, even if server communication gets delayed, clipboard enforcement, app tracking, and website filtering run continuously in real time without losing a millisecond or letting a student cheat during a network lag.
+
+Setup & Running Instructions
+
+1. Backend SetupNavigate to the backend directory, install dependencies, and start the server:Bashcd backend
+npm install
+node server.js
+2. Frontend SetupNavigate to the frontend directory, install dependencies, and launch the development server:Bashcd frontend
+npm install
+npm run dev
+
+3. C Client Agent Setup (323_Project)The client agent is built in C for Windows (e.g., using Code::Blocks or GCC).Create Project: Open your IDE (e.g., Code::Blocks) and create a new C Console Project named 323_Project.Add Files: Add all .c and .h project files into the workspace:main.cclipboard_monitor.c / clipboard_monitor.hnetwork_filter.c / network_filter.happ_monitor.c / app_monitor.hserver_comm.c / server_comm.hConfigure Linker Settings:Go to Project $\rightarrow$ Build options...Select Linker settings.Under Other linker options (or Link Libraries), add the following flags:Plaintext-lwininet
+-lws2_32
+
+Build & Run: Compile and run the executable on the target client machine.
+
+Video Demonstration Link: https://drive.google.com/file/d/1_J0CoQ1usCTlynTTjOiOLuIqIzJdKhuh/view?usp=sharing
